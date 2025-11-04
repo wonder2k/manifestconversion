@@ -95,4 +95,4 @@ A: 可以使用 Heroku、Railway 或其他支持 Python 的平台部署 Flask �
 
 ---
 
-支持联系：support@xiangxiang-logistics.com
+支持联系：support@JC-logistics.com
