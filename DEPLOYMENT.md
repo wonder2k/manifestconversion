@@ -489,8 +489,8 @@ sudo supervisorctl restart excel-converter
 
 如有任何部署问题，请联系：
 
-- **公司**：广州翔翔物流有限公司
-- **技术支持**：support@xiangxiang-logistics.com
+- **公司**：广州吉成物流有限公司
+- **技术支持**：support@JC-logistics.com
 - **紧急联系**：+86-20-XXXX-XXXX
 
 ---
