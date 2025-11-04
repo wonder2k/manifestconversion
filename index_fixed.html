@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 文件转换系统 - 广州翔翔物流</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .logo {
+            font-size: 0.9em;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .box {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            background: #f9f9f9;
+        }
+
+        .box h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .box-icon {
+            font-size: 1.8em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f0ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8e0ff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .upload-button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .upload-button:hover {
+            background: #764ba2;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .download-area {
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .download-placeholder {
+            color: #999;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .download-button {
+            background: #28a745;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background 0.3s ease;
+            display: none;
+        }
+
+        .download-button:hover {
+            background: #218838;
+        }
+
+        .download-button.show {
+            display: inline-block;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95em;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loader.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .conversion-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #555;
+            display: none;
+        }
+
+        .conversion-stats.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Excel 文件转换系统</h1>
+            <p>MANIFEST 格式 → 佐川派送模板</p>
+            <div class="logo">广州翔翔物流有限公司</div>
+        </div>
+
+        <div class="content">
+            <!-- 左侧：上传区域 -->
+            <div class="box">
+                <h2>
+                    <span class="box-icon">📤</span>
+                    步骤 1：上传 A 文件 (MANIFEST)
+                </h2>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p class="upload-text">
+                        拖拽 MANIFEST 格式的 Excel 文件到此处<br>
+                        <strong>或</strong>
+                    </p>
+                    <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                        点击选择文件
+                    </button>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" />
+                </div>
+
+                <div class="file-info" id="fileInfo"></div>
+                <div class="loader" id="loader">
+                    <div class="spinner"></div>
+                    <p>正在处理文件，请稍候...</p>
+                </div>
+                <div class="status" id="uploadStatus"></div>
+                <div class="conversion-stats" id="conversionStats"></div>
+            </div>
+
+            <!-- 右侧：下载区域 -->
+            <div class="box">
+                <h2>
+                    <span class="box-icon">📥</span>
+                    步骤 2：下载 B 文件 (佐川模板)
+                </h2>
+
+                <div class="download-area">
+                    <div class="download-placeholder" id="downloadPlaceholder">
+                        ⏳ 等待文件上传和转换...
+                    </div>
+                    <button class="download-button" id="downloadButton" onclick="downloadFile()">
+                        ⬇️ 下载转换后的文件
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>©2025 广州翔翔物流有限公司 | 所有数据在浏览器本地处理，不上传到服务器</p>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFile = null;
+        let convertedWorkbook = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const fileInfo = document.getElementById('fileInfo');
+        const loader = document.getElementById('loader');
+        const downloadButton = document.getElementById('downloadButton');
+        const downloadPlaceholder = document.getElementById('downloadPlaceholder');
+        const conversionStats = document.getElementById('conversionStats');
+
+        // 拖拽事件
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            // 验证文件格式
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                showStatus('error', '❌ 错误：只支持 Excel 文件 (.xlsx 或 .xls)，请重新上传');
+                return;
+            }
+
+            uploadedFile = file;
+            showFileInfo(file);
+            convertFile(file);
+        }
+
+        function showFileInfo(file) {
+            const sizeInKB = (file.size / 1024).toFixed(2);
+            const uploadDate = new Date().toLocaleString('zh-CN');
+            fileInfo.innerHTML = `
+                <strong>✓ 文件已选择</strong><br>
+                文件名: ${file.name}<br>
+                文件大小: ${sizeInKB} KB<br>
+                上传时间: ${uploadDate}
+            `;
+            fileInfo.classList.add('show');
+        }
+
+        function convertFile(file) {
+            loader.classList.add('show');
+            uploadStatus.classList.remove('show');
+            conversionStats.classList.remove('show');
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // 获取第一个工作表
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    // 转换为 JSON 数据（不使用 header，保留原始数据）
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    // 验证格式
+                    const validation = validateManifestFormat(jsonData);
+                    if (!validation.isValid) {
+                        throw new Error(validation.message);
+                    }
+
+                    // 执行转换
+                    const conversionResult = performConversion(jsonData);
+
+                    // 创建新的工作簿
+                    convertedWorkbook = XLSX.utils.book_new();
+
+                    // 创建输出工作表
+                    const outputSheet = XLSX.utils.aoa_to_sheet(conversionResult.outputData);
+                    XLSX.utils.book_append_sheet(convertedWorkbook, outputSheet, '转换结果');
+
+                    loader.classList.remove('show');
+                    showStatus('success', '✓ 文件转换成功！');
+                    downloadButton.classList.add('show');
+                    downloadPlaceholder.textContent = '✓ 转换完成，可以下载文件';
+
+                    // 显示统计信息
+                    showConversionStats(conversionResult);
+
+                } catch (error) {
+                    loader.classList.remove('show');
+                    console.error('Conversion error:', error);
+                    showStatus('error', '❌ 转换失败：' + error.message);
+                    downloadButton.classList.remove('show');
+                    downloadPlaceholder.textContent = '⏳ 等待文件上传和转换...';
+                }
+            };
+
+            reader.onerror = () => {
+                loader.classList.remove('show');
+                showStatus('error', '❌ 读取文件失败，请检查文件完整性');
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function validateManifestFormat(jsonData) {
+            if (!jsonData || jsonData.length < 4) {
+                return {
+                    isValid: false,
+                    message: '文件行数不足，请确保是 MANIFEST 格式文件'
+                };
+            }
+
+            if (!jsonData[0] || jsonData[0].length < 9) {
+                return {
+                    isValid: false,
+                    message: '文件列数不足，请确保是 MANIFEST 格式文件'
+                };
+            }
+
+            // 检查第 4 行是否有映射标注
+            const mappingRow = jsonData[3] || [];
+            const hasMappingMarkers = mappingRow.some(cell => cell !== null && cell !== undefined && cell !== '');
+
+            if (!hasMappingMarkers) {
+                return {
+                    isValid: false,
+                    message: '第 4 行缺少转换规则标注，请检查文件格式'
+                };
+            }
+
+            return { isValid: true };
+        }
+
+        function excelColToIndex(col) {
+            // 将 Excel 列字母转换为 0-based 索引
+            // A=0, B=1, ..., Z=25, AA=26, AB=27, ..., AL=37
+            if (!col || col === '') return -1;
+
+            col = col.toString().trim().toUpperCase();
+            if (col.length === 1) {
+                return col.charCodeAt(0) - 65;  // A-Z
+            } else if (col.length === 2) {
+                return (col.charCodeAt(0) - 65 + 1) * 26 + (col.charCodeAt(1) - 65);
+            }
+            return -1;
+        }
+
+        function performConversion(jsonData) {
+            // 生成 B 文件的标题行
+            const bHeaders = [
+                '客户订单号', '运输方式', '税金支付方式', '派送单号', '包裹类型', '货物类别',
+                '申报币种', 'COD金额', 'COD币种', '客户备注', '销售URL', 'IOSS增值税类型',
+                'EORI登记号', 'VAT税号', 'IOSS登记号/发件人税号', '出口商名称', '电商平台名称',
+                '电商平台代码', '出口申报币种', '出口商社会信用代码', '原产地1', '产品型号1',
+                '重量(kg)', '中文品名1', '英文品名1', '数量1', '单位净重(kg)1', '申报单价1',
+                '收件人姓名', '收件人电话', '收件人国家', '收件人城市', '收件人省/州', '收件人地址',
+                '收件人邮编'
+            ];
+
+            const outputData = [];
+            outputData.push(bHeaders);
+
+            // 获取 A 文件第 4 行的映射规则（索引 3）
+            const mappingRow = jsonData[3] || [];
+
+            // 构建动态列映射
+            const columnMapping = {};  // a_col_index -> b_col_index
+            for (let i = 0; i < mappingRow.length; i++) {
+                const marker = mappingRow[i];
+                if (marker && marker !== '') {
+                    const marker_str = marker.toString().trim();
+                    if (marker_str !== 'Y+Z') {  // Y+Z 需要特殊处理
+                        const b_idx = excelColToIndex(marker_str);
+                        if (b_idx >= 0) {
+                            columnMapping[i] = b_idx;
+                        }
+                    }
+                }
+            }
+
+            let convertedRows = 0;
+
+            // 处理数据行（从第 2 行开始，即 index 1）
+            for (let rowIdx = 1; rowIdx < jsonData.length; rowIdx++) {
+                // 跳过空行和特殊行
+                if (rowIdx === 2 || rowIdx === 3) continue;
+
+                const sourceRow = jsonData[rowIdx] || [];
+                const outputRow = new Array(bHeaders.length).fill(null);
+
+                // 标准列映射
+                for (const [src_col, dest_col] of Object.entries(columnMapping)) {
+                    const src_idx = parseInt(src_col);
+                    if (src_idx < sourceRow.length && sourceRow[src_idx] !== undefined && sourceRow[src_idx] !== null) {
+                        outputRow[dest_col] = sourceRow[src_idx];
+                    }
+                }
+
+                // GOODS 列特殊处理 (A 文件列 8 = 索引 8)
+                // 检查第 4 行是否标注了 GOODS 列为 Y+Z
+                if (mappingRow[8] === 'Y+Z' || mappingRow[8] === 'Y+Z ') {
+                    const goodsValue = sourceRow[8];
+                    if (goodsValue !== undefined && goodsValue !== null && goodsValue !== '') {
+                        const goods_str = String(goodsValue);
+                        const items = goods_str.split(',').map(item => item.trim());
+
+                        if (items.length > 0) {
+                            // Y 列 (索引 24): 第一项去除末尾数字
+                            const firstItem = items[0];
+                            const match = firstItem.match(/(\d+)\s*$/);
+                            if (match) {
+                                outputRow[24] = firstItem.substring(0, match.index).trim();
+                                outputRow[25] = match[1]; // Z 列 (索引 25)
+                            } else {
+                                outputRow[24] = firstItem;
+                            }
+
+                            // AM 列 (索引 38 - 需要扩展): 第二项产品+数量 + 后续项
+                            if (items.length > 1) {
+                                const secondItem = items[1];
+                                const productMatch = secondItem.match(/\s+([A-Z][A-Z\s]*?)\s+(\d+)\s*$/);
+                                let productQty = '';
+
+                                if (productMatch) {
+                                    productQty = productMatch[1].trim() + ' ' + productMatch[2];
+                                } else {
+                                    productQty = secondItem;
+                                }
+
+                                // 如果超出现有列，需要扩展
+                                if (outputRow.length <= 38) {
+                                    while (outputRow.length <= 38) {
+                                        outputRow.push(null);
+                                    }
+                                }
+
+                                if (items.length > 2) {
+                                    outputRow[38] = productQty + ',' + items.slice(2).join(',');
+                                } else {
+                                    outputRow[38] = productQty;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                outputData.push(outputRow);
+                convertedRows++;
+            }
+
+            return {
+                outputData: outputData,
+                convertedRows: convertedRows,
+                sourceRows: jsonData.length - 1
+            };
+        }
+
+        function showConversionStats(result) {
+            const stats = `
+                ✓ 成功转换 ${result.convertedRows} 行数据 | 
+                源文件共 ${result.sourceRows} 行 | 
+                时间: ${new Date().toLocaleTimeString('zh-CN')}
+            `;
+            conversionStats.textContent = stats;
+            conversionStats.classList.add('show');
+        }
+
+        function downloadFile() {
+            if (!convertedWorkbook) {
+                showStatus('error', '❌ 没有可下载的文件');
+                return;
+            }
+
+            const fileName = 'Zuo-Chuan-Converted-' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(convertedWorkbook, fileName);
+        }
+
+        function showStatus(type, message) {
+            uploadStatus.className = `status show ${type}`;
+            uploadStatus.textContent = message;
+        }
+    </script>
+</body>
+</html>
