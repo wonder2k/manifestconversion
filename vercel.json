@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "echo 'Static site'",
   "public": true,
-  "env": [],
+  "version": 2,
   "regions": ["iad1"],
   "routes": [
     {
